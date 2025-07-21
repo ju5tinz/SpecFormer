@@ -1,6 +1,21 @@
 import os
 import torch
 from torch.utils.data import Dataset
+import torch.nn.functional as F
+
+max_seq_len = 20
+
+def collate_fn(batch):
+    # len(batch) is batch size
+    # batch is a list of tuples (sequence, label)
+    # sequence has shape (sequence_length, feature_size)
+    # label is 1D tensor
+    sequences, labels, charges, NCEs = zip(*batch)
+    sequences = torch.stack([F.pad(s, (0, 0, 0, max_seq_len - len(s)), value=0.0) for s in sequences])
+    labels = torch.tensor(labels, dtype=torch.float32)
+    charges = torch.tensor(charges, dtype=torch.int32)
+    NCEs = torch.tensor(NCEs, dtype=torch.float32)
+    return sequences, labels, charges, NCEs
 
 class SpectrumDataset(Dataset):
     def __init__(self, root_dir):
@@ -13,7 +28,7 @@ class SpectrumDataset(Dataset):
         self.ionDictN = 0
         
         for data_file in os.listdir(root_dir):
-            if data_file.startswith(".") or data_file != "IARPA3_best_tissue_processed":
+            if data_file.startswith("."):
                 continue
             with open(os.path.join(root_dir, data_file), 'r') as f:
                 print("processing: ", f)
