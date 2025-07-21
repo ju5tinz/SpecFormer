@@ -5,3 +5,4 @@ papers/
 data/*
 processed/*
 checkpoints/*
+MS2FeatureConverter/.vs/
