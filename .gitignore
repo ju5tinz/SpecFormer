@@ -1,0 +1,7 @@
+.DS_STORE
+myenv/
+__pycache__/
+papers/
+data/*
+processed/*
+checkpoints/*
