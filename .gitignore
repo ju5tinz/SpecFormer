@@ -8,3 +8,4 @@ checkpoints/*
 onnx/*
 MS2FeatureConverter/.vs/
 notebook.ipynb
+lr_finder.py
