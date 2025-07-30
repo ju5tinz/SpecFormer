@@ -18,7 +18,7 @@ def collate_fn(batch):
     return sequences, labels, charges, NCEs
 
 class SpectrumDataset(Dataset):
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, exclude_file=[]):
         self.sequenceList = []
         self.chargeList = []
         self.NCEList = []
@@ -29,6 +29,8 @@ class SpectrumDataset(Dataset):
         
         for data_file in os.listdir(root_dir):
             if data_file.startswith("."):
+                continue
+            if data_file in exclude_file:
                 continue
             with open(os.path.join(root_dir, data_file), 'r') as f:
                 print("processing: ", f)

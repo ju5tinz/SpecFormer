@@ -83,6 +83,7 @@ int main(int argc, char* argv[])
         {
             if (strstr(charline, "Name:") == charline)
             {
+                cout << "charline: " << charline << endl;
                 charge = 0;
                 Mass0 = 0.0;
                 PrecursorMz = 0.0f;
@@ -96,6 +97,8 @@ int main(int argc, char* argv[])
                 }
                 sequence[b-6] = '\0';
 
+                cout << "sequence: " << sequence << endl;
+
                 //read modification from parenthesis (only takes JUOsty)
                 mod_count = 0;
                 c = strchr(charline, '(');
@@ -106,6 +109,7 @@ int main(int argc, char* argv[])
                     if (c != NULL) {
                         *c = '\0';
                     }
+                    cout << "index: " << index << ", residue: " << residue << ", mod: " << mod << endl;
                     if (sequence[index] == residue)
                     {
                         if (sequence[index] == 'C' && strcmp(mod, "CAM") == 0)
@@ -135,8 +139,10 @@ int main(int argc, char* argv[])
                             mod_count++;
                             keep = 0;
                         }
-                        else
+                        else {
+                            cout << "Skipping spectrum with mod_count " << mod_count << " and keep " << keep << endl;
                             keep = 0;
+                        }
                     }
                     else
                         keep = 0;
