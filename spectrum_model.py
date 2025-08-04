@@ -69,7 +69,7 @@ class SpectrumModel(nn.Module):
         x = F.relu(x)
 
         x = self.output_proj(x)
-        #x = F.sigmoid(x)
+        x = F.sigmoid(x)
         x = x.mean(dim=1)
         
         return x

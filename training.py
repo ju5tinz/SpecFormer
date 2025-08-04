@@ -22,7 +22,7 @@ class CosineLoss(nn.Module):
     dim: int
     eps: float
 
-    def __init__(self, dim: int = 1, eps: float = 1e-8) -> None:
+    def __init__(self, dim: int = 0, eps: float = 1e-8) -> None:
         super().__init__()
         self.dim = dim
         self.eps = eps
@@ -30,7 +30,20 @@ class CosineLoss(nn.Module):
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         x1_sqrt = x1.sqrt()
         x2_sqrt = x2.sqrt()
-        return (1 - F.cosine_similarity(x1, x2, self.dim, self.eps)).mean()
+        return 1 - F.cosine_similarity(x1, x2, self.dim, self.eps)
+
+class FileredCosineLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.cosine_loss = CosineLoss()
+
+    def forward(self, outputs, labels):
+        batches_n = outputs.shape[0]
+        total_loss = 0
+        for i in range(batches_n):
+            loss = self.cosine_loss(outputs[i], labels[i])
+            total_loss += loss
+        return total_loss / batches_n
 
 def train_epoch(model, dataloader, optimizer, criterion):
     model.train()
@@ -43,7 +56,6 @@ def train_epoch(model, dataloader, optimizer, criterion):
         
         optimizer.zero_grad()
         outputs = model(sequences, charges, NCEs)
-        #print(outputs.shape, labels.shape)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
@@ -85,7 +97,7 @@ if __name__ == "__main__":
 
     model = SpectrumModel(token_size=dataset.token_dim, dict_size=dataset.ionDictN, seq_max_len=max_seq_len).to(device)
     opt = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0.001)
-    crit = CosineLoss(dim=1)
+    crit = FileredCosineLoss()
 
     training_losses = []
     val_losses = []

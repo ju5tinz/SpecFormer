@@ -46,7 +46,7 @@ class SpectrumDataset(Dataset):
                         self.SpectrumDictList.append({})
                     else:
                         lineList = line.split(",")
-                        self.SpectrumDictList[currIdx][int(lineList[0])] = float(lineList[2])
+                        self.SpectrumDictList[currIdx][int(lineList[0])] = float(lineList[1])
 
         self.token_dim = len(self.aminoAcidAlphabet)
     
