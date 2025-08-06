@@ -3,7 +3,10 @@ myenv/
 __pycache__/
 papers/
 data/*
+
 processed/*
+!processed/.readme
+
 checkpoints/*
 onnx/*
 MS2FeatureConverter/*
