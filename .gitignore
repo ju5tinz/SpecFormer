@@ -6,6 +6,6 @@ data/*
 processed/*
 checkpoints/*
 onnx/*
-MS2FeatureConverter/.vs/
+MS2FeatureConverter/*
 notebook.ipynb
 lr_finder.py
