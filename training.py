@@ -8,7 +8,7 @@ import torch.optim as optim
 import torch.nn as nn
 from torch import Tensor
 
-max_seq_len = 20
+max_seq_len = 40
 batch_size = 128
 
 epochs = 2000
@@ -32,7 +32,7 @@ class CosineLoss(nn.Module):
         x2_sqrt = x2.sqrt()
         return 1 - F.cosine_similarity(x1, x2, self.dim, self.eps)
 
-class FileredCosineLoss(nn.Module):
+class FilteredCosineLoss(nn.Module):
     def __init__(self):
         super().__init__()
         self.cosine_loss = CosineLoss()
@@ -41,11 +41,12 @@ class FileredCosineLoss(nn.Module):
         batches_n = outputs.shape[0]
         total_loss = 0
         for i in range(batches_n):
-            loss = self.cosine_loss(outputs[i], labels[i])
+            mask = labels[i] != -1
+            loss = self.cosine_loss(outputs[i][mask], labels[i][mask])
             total_loss += loss
         return total_loss / batches_n
 
-def train_epoch(model, dataloader, optimizer, criterion):
+def train_epoch(model, dataloader, optimizer, criterion, device):
     model.train()
     total_loss = 0.0
     for sequences, labels, charges, NCEs in dataloader:
@@ -62,7 +63,7 @@ def train_epoch(model, dataloader, optimizer, criterion):
         total_loss += loss.item()
     return total_loss / len(dataloader)
 
-def evaluate(model, dataloader, criterion):
+def evaluate(model, dataloader, criterion, device):
     model.eval()
     total_loss = 0.0
     with torch.no_grad():
@@ -77,12 +78,20 @@ def evaluate(model, dataloader, criterion):
             total_loss += loss.item()
     return total_loss / len(dataloader)
 
-if __name__ == "__main__":
-    __spec__ = None
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def get_device():
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    elif torch.backends.mps.is_available():
+        return torch.device("mps")
+    else:
+        return torch.device("cpu")
+
+def train(dataset_dir, exclude_files=[]):
+    #__spec__ = None
+    device = get_device()
     print(f"Using device: {device}")
 
-    dataset = SpectrumDataset(root_dir='processed/', exclude_file=["human_hcd_tryp_best_processed"])
+    dataset = SpectrumDataset(root_dir=dataset_dir, exclude_file=exclude_files)
     print("dataset size:", len(dataset))
 
     total_size = len(dataset)
@@ -93,20 +102,24 @@ if __name__ == "__main__":
 
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, num_workers=4, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, num_workers=4, pin_memory=True)
+    pin_memory = True
+    if str(device) == "mps":
+        pin_memory = False
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, num_workers=4, pin_memory=pin_memory)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, num_workers=4, pin_memory=pin_memory)
 
     model = SpectrumModel(token_size=dataset.token_dim, dict_size=dataset.ionDictN, seq_max_len=max_seq_len).to(device)
     opt = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0.001)
-    crit = FileredCosineLoss()
+    crit = FilteredCosineLoss()
 
     training_losses = []
     val_losses = []
     best_val_loss = float('inf')
     epochs_no_improvement = 0
     for epoch in range(epochs):
-        train_loss = train_epoch(model, train_loader, opt, crit)
-        val_loss = evaluate(model, val_loader, crit)
+        train_loss = train_epoch(model, train_loader, opt, crit, device)
+        val_loss = evaluate(model, val_loader, crit, device)
 
         training_losses.append(train_loss)
         val_losses.append(val_loss)
@@ -124,4 +137,7 @@ if __name__ == "__main__":
         if epochs_no_improvement >= patience:
             print(f"Early stopping at epoch {epoch + 1} with no improvement for {epochs_no_improvement} epochs.")
             break
+
+if __name__ == "__main__":
+    train('processed/')
         

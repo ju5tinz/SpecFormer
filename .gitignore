@@ -1,5 +1,5 @@
 .DS_STORE
-myenv/
+venv/
 __pycache__/
 papers/
 data/*
@@ -8,6 +8,8 @@ processed/*
 !processed/.readme
 
 checkpoints/*
+!checkpoints/.readme
+
 onnx/*
 MS2FeatureConverter/*
 notebook.ipynb
