@@ -106,8 +106,8 @@ def train(dataset_dir, exclude_files=[]):
     if str(device) == "mps":
         pin_memory = False
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, num_workers=4, pin_memory=pin_memory)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, num_workers=4, pin_memory=pin_memory)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, num_workers=4, pin_memory=False)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, num_workers=4, pin_memory=False)
 
     model = SpectrumModel(token_size=dataset.token_dim, dict_size=dataset.ionDictN, seq_max_len=max_seq_len).to(device)
     opt = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0.001)
