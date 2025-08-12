@@ -9,7 +9,6 @@ import torch.nn as nn
 from torch import Tensor
 
 max_seq_len = 40
-batch_size = 128
 
 epochs = 2000
 patience = 5
@@ -86,7 +85,7 @@ def get_device():
     else:
         return torch.device("cpu")
 
-def train(dataset_dir, exclude_files=[]):
+def train(dataset_dir, weights_file=None, exclude_files=[], batch_size=128, learning_rate=1e-4, weight_decay=0.001):
     #__spec__ = None
     device = get_device()
     print(f"Using device: {device}")
@@ -95,22 +94,28 @@ def train(dataset_dir, exclude_files=[]):
     print("dataset size:", len(dataset))
 
     total_size = len(dataset)
-    train_size = int(0.8 * total_size)
-    val_size = total_size - train_size
+    train_size = int(0.96 * total_size)
+    test_size = int(0.2 * total_size)
+    val_size = total_size - train_size - test_size
 
     generator = torch.Generator().manual_seed(42)
 
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
+    train_dataset, test_dataset, val_dataset = random_split(dataset, [train_size, test_size, val_size], generator=generator)
 
     pin_memory = True
     if str(device) == "mps":
         pin_memory = False
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, num_workers=4, pin_memory=False)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, num_workers=4, pin_memory=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, num_workers=4, pin_memory=False)
 
     model = SpectrumModel(token_size=dataset.token_dim, dict_size=dataset.ionDictN, seq_max_len=max_seq_len).to(device)
-    opt = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=0.001)
+
+    if weights_file:
+        print(f"Loading model weights from: {weights_file}")
+        model.load_state_dict(torch.load(weights_file, map_location=device))
+
+    opt = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     crit = FilteredCosineLoss()
 
     training_losses = []
@@ -119,7 +124,8 @@ def train(dataset_dir, exclude_files=[]):
     epochs_no_improvement = 0
     for epoch in range(epochs):
         train_loss = train_epoch(model, train_loader, opt, crit, device)
-        val_loss = evaluate(model, val_loader, crit, device)
+        print(f"epoch {epoch} trained")
+        val_loss = evaluate(model, test_loader, crit, device)
 
         training_losses.append(train_loss)
         val_losses.append(val_loss)
