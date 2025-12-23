@@ -6,11 +6,8 @@ from typing import Optional, Tuple
 
 class TalkingHeadAttention(nn.Module):
     """
-    A simplified implementation of Talking-Head Attention.
-
-    This version makes two key assumptions for simplicity:
-    1.  The embedding dimension (`embed_dim`) is the same for the query, key, and value.
-    2.  No attention masking is applied.
+    Simplified implementation of Talking-Head Attention.
+    Assumes embed_dim is divisible by num_heads and no attention masking.
     """
     def __init__(self, embed_dim: int, num_heads: int, dropout: float = 0.0,
                  bias: bool = True, batch_first: bool = False):
@@ -19,7 +16,6 @@ class TalkingHeadAttention(nn.Module):
             raise ValueError(
                 f"embed_dim ({embed_dim}) must be divisible by num_heads ({num_heads})"
             )
-
         self.embed_dim = embed_dim
         self.num_heads = num_heads
         self.head_dim = embed_dim // num_heads
@@ -44,7 +40,14 @@ class TalkingHeadAttention(nn.Module):
                 value: torch.Tensor,
                 need_weights: bool = False,
                 average_attn_weights: bool = True) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
-
+        """
+        Forward pass for talking-head attention.
+        Args:
+            query, key, value: (seq_len, batch, embed_dim) or (batch, seq_len, embed_dim) if batch_first
+        Returns:
+            output: attended tensor
+            attn_weights: optional attention weights
+        """
         if self.batch_first:
             query, key, value = [x.transpose(1, 0) for x in (query, key, value)]
 

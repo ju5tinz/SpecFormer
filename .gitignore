@@ -10,6 +10,10 @@ processed/*
 checkpoints/*
 !checkpoints/.readme
 
+predicted/
+
+config/
+
 onnx/*
 MS2FeatureConverter/*
 notebook.ipynb
