@@ -16,5 +16,4 @@ config/
 
 onnx/*
 MS2FeatureConverter/*
-notebook.ipynb
-lr_finder.py
+onnx_export.py
