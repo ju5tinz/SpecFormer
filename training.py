@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from utils import generate_dataset_subsets, FilteredCosineLoss, get_device
 import os
+from datetime import datetime
 
 max_seq_len = 40
 patience = 5
@@ -72,7 +73,13 @@ def train(dataset_dir: str,
     if val_data_filenames is None:
         val_data_filenames = []
     device = get_device()
+    
+    # Log training start time and date
+    start_time = datetime.now()
+    print("="*60)
+    print(f"Training started at: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Using device: {device}")
+    print("="*60)
 
     dataset = None
     train_loader = None
@@ -107,6 +114,18 @@ def train(dataset_dir: str,
 
     model = SpectrumModel(token_size=token_size, dict_size=dict_size, seq_max_len=max_seq_len, **model_args).to(device)
 
+    # Log model details
+    print("\nModel Details:")
+    print(f"  Token size: {token_size}")
+    print(f"  Dictionary size: {dict_size}")
+    print(f"  Max sequence length: {max_seq_len}")
+    print(f"  Additional model args: {model_args}")
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"  Total parameters: {total_params:,}")
+    print(f"  Trainable parameters: {trainable_params:,}")
+    print()
+
     if weights_file:
         print(f"Loading model weights from: {weights_file}")
         model.load_state_dict(torch.load(weights_file, map_location=device))
@@ -139,6 +158,14 @@ def train(dataset_dir: str,
         if epochs_no_improvement >= patience:
             print(f"Early stopping at epoch {epoch + 1} with no improvement for {epochs_no_improvement} epochs.")
             break
+    
+    # Log training end time
+    end_time = datetime.now()
+    duration = end_time - start_time
+    print("\n" + "="*60)
+    print(f"Training completed at: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Total training duration: {duration}")
+    print("="*60)
 if __name__ == "__main__":
     train('processed/', 
           split_dataset=False, 
