@@ -4,18 +4,25 @@ from torch.utils.data import Dataset
 import torch.nn.functional as F
 from utils import write_list_to_file, get_list_from_file
 
-max_seq_len = 40
 
-def collate_fn(batch):
+def get_collate_fn(max_seq_len: int = 40):
     """
-    Pads sequences and stacks batch data for DataLoader.
+    Factory function that creates a collate_fn with the specified max_seq_len.
+
+    Args:
+        max_seq_len: Maximum sequence length for padding.
+
+    Returns:
+        A collate function for use with DataLoader.
     """
-    sequences, labels, charges, NCEs, mass_range_strs = zip(*batch)
-    sequences = torch.stack([F.pad(s, (0, 0, 0, max_seq_len - len(s)), value=0.0) for s in sequences])
-    labels = torch.tensor(labels, dtype=torch.float32)
-    charges = torch.tensor(charges, dtype=torch.int32)
-    NCEs = torch.tensor(NCEs, dtype=torch.float32)
-    return sequences, labels, charges, NCEs, mass_range_strs
+    def collate_fn(batch):
+        sequences, labels, charges, NCEs, mass_range_strs = zip(*batch)
+        sequences = torch.stack([F.pad(s, (0, 0, 0, max_seq_len - len(s)), value=0.0) for s in sequences])
+        labels = torch.tensor(labels, dtype=torch.float32)
+        charges = torch.tensor(charges, dtype=torch.int32)
+        NCEs = torch.tensor(NCEs, dtype=torch.float32)
+        return sequences, labels, charges, NCEs, mass_range_strs
+    return collate_fn
 
 class SpectrumDataset(Dataset):
     """

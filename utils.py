@@ -61,9 +61,16 @@ class CosineLoss(nn.Module):
         return 1 - F.cosine_similarity(x1, x2, self.dim, self.eps)
 
 class FilteredCosineLoss(nn.Module):
-    def __init__(self):
+    """
+    Cosine loss that filters out masked labels (value -1).
+
+    Args:
+        reduction: 'mean' (default), 'sum', or 'none' for per-sample losses.
+    """
+    def __init__(self, reduction: str = 'mean'):
         super().__init__()
         self.cosine_loss = CosineLoss()
+        self.reduction = reduction
 
     def forward(self, outputs, labels):
         batches_n = outputs.shape[0]
@@ -72,4 +79,10 @@ class FilteredCosineLoss(nn.Module):
             mask = labels[i] != -1
             loss = self.cosine_loss(outputs[i][mask], labels[i][mask])
             losses.append(loss)
-        return losses
+
+        if self.reduction == 'none':
+            return losses
+        stacked = torch.stack(losses)
+        if self.reduction == 'sum':
+            return stacked.sum()
+        return stacked.mean()
