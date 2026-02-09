@@ -14,6 +14,4 @@ predicted/
 
 config/
 
-onnx/*
 MS2FeatureConverter/*
-onnx_export.py
