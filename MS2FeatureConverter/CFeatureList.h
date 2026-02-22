@@ -1,8 +1,11 @@
 #pragma once
 #include <string>
 
-#define OFFSET_FROM 30
-#define OFFSET_TO 64
+#define MAXCHARGE	5	//Max charge of a fragment ion
+#define MAXLENGTH	40
+#define NUM_B_OFFSETS	17
+#define NUM_Y_OFFSETS	12
+#define OFFSETSIZE	65
 
 class CFeatureList
 {
