@@ -13,5 +13,3 @@ checkpoints/*
 predicted/
 
 config/
-
-MS2FeatureConverter/*
