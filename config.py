@@ -8,15 +8,15 @@ class ModelConfig:
     num_heads: int = 64
     max_seq_len: int = 40
     penultimate_dim: int = 2048
-    dropout_rate: float = 0.1
+    dropout_rate: float = 0.2
 
 
 @dataclass
 class TrainConfig:
     """Configuration for training loop."""
-    batch_size: int = 128
+    batch_size: int = 512
     learning_rate: float = 1e-4
-    weight_decay: float = 0.001
+    weight_decay: float = 1e-3
     epochs: int = 100
     patience: int = 5
     checkpoint_path: str = "checkpoints/best_model.pth"
@@ -36,5 +36,10 @@ class DataConfig:
     """Configuration for data loading."""
     data_dir: str = "processed/"
     alphabet_path: str = "config/amino_acid_alphabet.txt"
-    train_files: list = field(default_factory=list)
-    val_files: list = field(default_factory=list)
+    train_files: list = field(default_factory=lambda: [
+        'AItrain_LumosSynthetic_2022418v2.ann.txt',
+        'AItrain_QEHumanCho_2022418v2.ann.txt',
+    ])
+    val_files: list = field(default_factory=lambda: [
+        'ValidUniq2022418_202333.ann.txt',
+    ])
