@@ -4,11 +4,11 @@ __pycache__/
 papers/
 data/*
 
-processed/*
-!processed/.readme
+SpecFormer/processed/*
+!SpecFormer/processed/.readme
 
-checkpoints/*
-!checkpoints/.readme
+SpecFormer/checkpoints/*
+!SpecFormer/checkpoints/.readme
 
 predicted/
 
